@@ -12,7 +12,46 @@ Both images are verified to build and run (`apps/api/Dockerfile`, `apps/web/Dock
 - **DNS**: an `A` record for `crm.abbadev.com` → your server's public IP.
 - Ports **80** and **443** open in the firewall.
 
-## First deploy
+## Which path? (two situations)
+- **Fresh server, nothing on ports 80/443** → use the Caddy stack (`docker-compose.prod.yml`),
+  which gets HTTPS automatically. This is the "First deploy" section below.
+- **Server already runs Nginx/Apache with other sites** (e.g. abbadev.com already serves
+  `app.abbadev.com`, `ihris.abbadev.com`, …) → **use this section.** Caddy would fight your
+  existing web server for 80/443, so instead run the stack on localhost and add a `crm.abbadev.com`
+  vhost to the web server you already have.
+
+### Deploying alongside an existing Nginx/Apache
+```bash
+# 0. Which web server is running?
+systemctl is-active nginx apache2 2>/dev/null; nginx -v 2>/dev/null; apache2 -v 2>/dev/null
+
+# 1. Get the code + env (see the env steps in "First deploy" for secrets)
+git clone https://github.com/iamrgalisanao/crm.git crmsales && cd crmsales
+cp .env.prod.example .env.prod && nano .env.prod    # domain, DB password, JWT secrets
+
+# 2. Bring up the stack bound to localhost only (no Caddy, nothing public)
+docker compose -f docker-compose.server.yml --env-file .env.prod up -d --build
+docker compose -f docker-compose.server.yml --env-file .env.prod exec api npm run db:seed
+#   → web on 127.0.0.1:3000, API on 127.0.0.1:4000
+
+# 3. Add the vhost to your web server, then get SSL:
+# --- Nginx ---
+sudo cp deploy/nginx/crm.abbadev.com.conf /etc/nginx/conf.d/crm.abbadev.com.conf
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d crm.abbadev.com
+# --- OR Apache ---
+sudo cp deploy/apache/crm.abbadev.com.conf /etc/apache2/sites-available/
+sudo a2enmod proxy proxy_http headers && sudo a2ensite crm.abbadev.com
+sudo apache2ctl configtest && sudo systemctl reload apache2
+sudo certbot --apache -d crm.abbadev.com
+```
+Point `crm.abbadev.com` DNS at the same server IP (you already do this for your other subdomains),
+then open **https://crm.abbadev.com**. Updates: `git pull` then re-run step 2.
+
+> The `Caddyfile` / `docker-compose.prod.yml` in the repo are for the *fresh-server* case only —
+> ignore them here.
+
+## First deploy (fresh server, Caddy handles HTTPS)
 ```bash
 # 1. Get the code onto the server
 git clone <your-repo> crmsales && cd crmsales   # or scp/rsync the folder
