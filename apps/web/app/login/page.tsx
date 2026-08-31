@@ -12,7 +12,7 @@ const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD || '';
 export default function LoginPage() {
   const { login, user, loading } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState(DEMO_EMAIL);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -59,9 +59,7 @@ export default function LoginPage() {
             >
               {submitting ? 'Loading demo…' : '✨ Explore the live demo'}
             </button>
-            <p className="mt-2 text-xs text-gray-500">
-              Guest access · <span className="font-mono">{DEMO_EMAIL}</span> · resets nightly
-            </p>
+            <p className="mt-2 text-xs text-gray-500">Sandbox demo · no sign-up · resets nightly</p>
           </div>
         )}
 
