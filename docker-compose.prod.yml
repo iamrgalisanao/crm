@@ -55,6 +55,8 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${PUBLIC_URL}
+        NEXT_PUBLIC_DEMO_EMAIL: ${SEED_DEMO_EMAIL:-}
+        NEXT_PUBLIC_DEMO_PASSWORD: ${SEED_DEMO_PASSWORD:-}
     restart: unless-stopped
     depends_on:
       - api

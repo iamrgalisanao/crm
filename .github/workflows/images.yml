@@ -54,3 +54,5 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             NEXT_PUBLIC_API_URL=${{ vars.PUBLIC_URL || 'https://crm.abbadev.com' }}
+            NEXT_PUBLIC_DEMO_EMAIL=${{ vars.DEMO_EMAIL }}
+            NEXT_PUBLIC_DEMO_PASSWORD=${{ vars.DEMO_PASSWORD }}
