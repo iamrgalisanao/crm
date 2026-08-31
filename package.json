@@ -1,0 +1,23 @@
+{
+  "name": "crm-sales",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace @crm/shared && npm run build --workspace @crm/api && npm run build --workspace @crm/web",
+    "dev:api": "npm run start:dev --workspace @crm/api",
+    "dev:web": "npm run dev --workspace @crm/web",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "prisma:generate": "npm run prisma:generate --workspace @crm/api",
+    "prisma:migrate": "npm run prisma:migrate --workspace @crm/api",
+    "db:seed": "npm run db:seed --workspace @crm/api",
+    "lint": "npm run lint --workspace @crm/api && npm run lint --workspace @crm/web"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

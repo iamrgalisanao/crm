@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f4f1ea; /* warm cream */
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: #1b1a18;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Warm the default border tone so the whole UI reads warm, not cool-gray. */
+.border-gray-200 { border-color: #ece7dd !important; }
+.border-gray-100 { border-color: #f1ede4 !important; }
+.border-gray-300 { border-color: #ddd6c9 !important; }
+
+/* Warm the neutral surface tints used across cards/tables. */
+.bg-gray-50 { background-color: #f8f6f0 !important; }
+.bg-gray-100 { background-color: #efebe1 !important; }
+.hover\:bg-gray-50:hover { background-color: #f4f1ea !important; }
+.hover\:bg-gray-100:hover { background-color: #eae5da !important; }

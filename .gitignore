@@ -1,0 +1,21 @@
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+*.log
+
+# Secrets & env (only *.example templates are committed)
+.env
+.env.local
+.env.*.local
+.env.prod
+apps/api/.env
+apps/web/.env
+
+# Backups / data
+backups/
+apps/api/prisma/*.db
+
+.DS_Store
