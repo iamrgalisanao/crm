@@ -103,9 +103,44 @@ export class DashboardService {
       },
       payments: { receivedThisMonth: toMajorString(paymentsReceivedMonth, 'PHP') },
       activities: { overdue: overdueFollowups, upcoming: upcomingFollowups },
+      winLoss: await this.winRate(oppWhere),
+      revenueTrend: await this.revenueTrend(oppWhere),
       funnel,
       leadSources,
     };
+  }
+
+  /** Win rate (won vs decided) for the performance gauge. */
+  private async winRate(oppWhere: any) {
+    const [won, lost] = await Promise.all([
+      this.prisma.opportunity.count({ where: { ...oppWhere, status: OpportunityStatus.WON } }),
+      this.prisma.opportunity.count({ where: { ...oppWhere, status: OpportunityStatus.LOST } }),
+    ]);
+    const rate = won + lost > 0 ? Math.round((won / (won + lost)) * 100) : 0;
+    return { won, lost, winRate: rate };
+  }
+
+  /** Won revenue by month, last 6 months, for the dashboard bar chart. */
+  private async revenueTrend(oppWhere: any) {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    const rows = await this.prisma.opportunity.findMany({
+      where: { ...oppWhere, status: OpportunityStatus.WON, closedAt: { gte: start } },
+      select: { amount: true, closedAt: true },
+    });
+    const months: { key: string; label: string; sum: bigint }[] = [];
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+      months.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label: d.toLocaleString('en', { month: 'short' }), sum: 0n });
+    }
+    const idx = new Map(months.map((m, i) => [m.key, i]));
+    for (const o of rows) {
+      if (!o.closedAt) continue;
+      const d = new Date(o.closedAt);
+      const i = idx.get(`${d.getFullYear()}-${d.getMonth()}`);
+      if (i != null) months[i].sum += o.amount;
+    }
+    return months.map((m) => ({ month: m.label, value: toMajorString(m.sum, 'PHP') }));
   }
 
   private ownScoped(): boolean {
