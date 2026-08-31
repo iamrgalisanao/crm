@@ -82,6 +82,32 @@ git pull
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 ```
 
+## Running as a public demo (rich data + guest login + nightly reset)
+For a demo that people can explore, seed the **demo dataset** instead of the plain seed —
+it wipes the DB and loads realistic accounts, contacts, leads (across statuses + PH map
+locations), opportunities spanning the pipeline, activities, and a full quote → order →
+invoice → payment flow, so every screen looks alive.
+
+```bash
+# one-off (or the first time)
+docker compose -f docker-compose.server.yml --env-file .env.prod exec \
+  -e TS_NODE_COMPILER_OPTIONS='{"module":"commonjs","moduleResolution":"node"}' \
+  api npm run db:seed:demo
+```
+
+Two logins are created (set them in `.env.prod`):
+- **Admin** — `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` (keep private).
+- **Guest demo** — `SEED_DEMO_EMAIL` / `SEED_DEMO_PASSWORD` (Sales Manager + Finance; can drive
+  the whole sell→collect flow but **cannot** manage users, settings, or integrations). Show these
+  on the landing page.
+
+**Nightly reset** keeps the demo tidy no matter how visitors poke at it:
+```bash
+chmod +x scripts/demo-reset.sh
+crontab -e
+30 3 * * *  cd /opt/crmsales && ./scripts/demo-reset.sh >> ./demo-reset.log 2>&1
+```
+
 ## Featuring it on abbadev.com
 - **Live demo:** add a "Live demo" button on abbadev.com linking to
   `https://crm.abbadev.com`, with the demo credentials shown on the page.
