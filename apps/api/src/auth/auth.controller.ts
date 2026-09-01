@@ -40,6 +40,23 @@ export class AuthController {
   }
 
   @Public()
+  @Get('demo')
+  demoStatus() {
+    return { enabled: this.auth.isDemoEnabled() };
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Post('demo-login')
+  @HttpCode(200)
+  async demoLogin(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const meta = { ip: req.ip, userAgent: req.headers['user-agent'] ?? null };
+    const { user, tokens } = await this.auth.demoLogin(meta);
+    this.setRefreshCookie(res, tokens.refreshToken);
+    return { accessToken: tokens.accessToken, user };
+  }
+
+  @Public()
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Post('refresh')
   @HttpCode(200)

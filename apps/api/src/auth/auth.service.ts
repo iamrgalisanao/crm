@@ -1,6 +1,7 @@
 import {
   Injectable,
   UnauthorizedException,
+  NotFoundException,
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -63,6 +64,19 @@ export class AuthService {
     });
 
     return { user: authUser, tokens };
+  }
+
+  /** Whether a public demo account is configured (drives the demo button). */
+  isDemoEnabled(): boolean {
+    return !!(this.config.get<string>('SEED_DEMO_EMAIL') && this.config.get<string>('SEED_DEMO_PASSWORD'));
+  }
+
+  /** Log in as the configured demo user — the browser never sees the password. */
+  async demoLogin(meta: { ip?: string | null; userAgent?: string | null }) {
+    const email = this.config.get<string>('SEED_DEMO_EMAIL');
+    const password = this.config.get<string>('SEED_DEMO_PASSWORD');
+    if (!email || !password) throw new NotFoundException('Demo access is not enabled');
+    return this.login(email, password, meta);
   }
 
   /** Load a user's full auth profile (roles → permission set). */

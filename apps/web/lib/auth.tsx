@@ -21,6 +21,7 @@ interface AuthState {
   user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginDemo: () => Promise<void>;
   logout: () => Promise<void>;
   can: (permission: string) => boolean;
 }
@@ -63,6 +64,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data.user);
   }, []);
 
+  const loginDemo = useCallback(async () => {
+    const data = await apiFetch<{ accessToken: string; user: AuthUser }>('/auth/demo-login', {
+      method: 'POST',
+      body: {},
+      retry: false,
+    });
+    setAccessToken(data.accessToken);
+    setUser(data.user);
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await apiFetch('/auth/logout', { method: 'POST', retry: false });
@@ -79,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, can }}>
+    <AuthContext.Provider value={{ user, loading, login, loginDemo, logout, can }}>
       {children}
     </AuthContext.Provider>
   );

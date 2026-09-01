@@ -3,23 +3,39 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth';
-
-// Only set on the public demo instance (build-time env). When present, the login
-// page offers a one-click guest sign-in. A real deployment leaves these unset.
-const DEMO_EMAIL = process.env.NEXT_PUBLIC_DEMO_EMAIL || '';
-const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD || '';
+import { apiFetch } from '../../lib/api';
 
 export default function LoginPage() {
-  const { login, user, loading } = useAuth();
+  const { login, loginDemo, user, loading } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [demoEnabled, setDemoEnabled] = useState(false);
 
   useEffect(() => {
     if (!loading && user) router.replace('/dashboard');
   }, [user, loading, router]);
+
+  // Ask the API whether a public demo account is configured (runtime, not build-time).
+  useEffect(() => {
+    apiFetch<{ enabled: boolean }>('/auth/demo', { retry: false })
+      .then((r) => setDemoEnabled(r.enabled))
+      .catch(() => setDemoEnabled(false));
+  }, []);
+
+  async function doDemo() {
+    setError(null);
+    setSubmitting(true);
+    try {
+      await loginDemo();
+      router.replace('/dashboard');
+    } catch (err: any) {
+      setError(err?.message ?? 'Demo is unavailable');
+      setSubmitting(false);
+    }
+  }
 
   async function doLogin(em: string, pw: string) {
     setError(null);
@@ -49,12 +65,12 @@ export default function LoginPage() {
           <p className="text-sm text-gray-500">Sign in to your workspace</p>
         </div>
 
-        {DEMO_EMAIL && (
+        {demoEnabled && (
           <div className="mb-4 rounded-xl border border-gold-200 bg-gradient-to-br from-gold-50 to-white p-4 text-center shadow-sm">
             <button
               type="button"
               disabled={submitting}
-              onClick={() => doLogin(DEMO_EMAIL, DEMO_PASSWORD)}
+              onClick={doDemo}
               className="w-full rounded-lg bg-gradient-to-br from-gold-300 to-gold-500 py-2.5 text-sm font-semibold text-brand-900 shadow-sm transition hover:from-gold-400 hover:to-gold-600 disabled:opacity-60"
             >
               {submitting ? 'Loading demo…' : '✨ Explore the live demo'}
@@ -63,7 +79,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        {DEMO_EMAIL && (
+        {demoEnabled && (
           <div className="mb-4 flex items-center gap-3 text-xs text-gray-400">
             <span className="h-px flex-1 bg-gray-200" />or sign in manually<span className="h-px flex-1 bg-gray-200" />
           </div>
